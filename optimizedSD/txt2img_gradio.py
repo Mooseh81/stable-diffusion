@@ -177,4 +177,4 @@ demo = gr.Interface(
     gr.Slider(64,4096,value = 512,step=64), gr.Slider(64,4096,value = 512,step=64), gr.Slider(0,50,value=7.5,step=0.1),"text","checkbox", "checkbox",gr.Text(value = "outputs/txt2img-samples")],
     outputs=["image", "text"],
 )
-demo.launch()
+demo.launch(server_name="192.168.1.64")
