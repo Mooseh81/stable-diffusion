@@ -1,7 +1,6 @@
-import argparse, os, sys, glob, random
+import argparse, os, re
 import torch
 import numpy as np
-import copy
 from random import randint
 from omegaconf import OmegaConf
 from PIL import Image
@@ -32,17 +31,6 @@ def load_model_from_config(ckpt, verbose=False):
     sd = pl_sd["state_dict"]
     return sd
 
-def load_GFPGAN():
-    model_name = 'GFPGANv1.3'
-    model_path = os.path.join(GFPGAN_dir, 'experiments/pretrained_models', model_name + '.pth')
-    if not os.path.isfile(model_path):
-        raise Exception("GFPGAN model not found at path "+model_path)
-
-    sys.path.append(os.path.abspath(GFPGAN_dir))
-    from gfpgan import GFPGANer
-
-    return GFPGANer(model_path=model_path, upscale=opt.upscale, arch='clean', channel_multiplier=2, bg_upsampler=None)
-
 
 config = "optimizedSD/v1-inference.yaml"
 ckpt = "models/ldm/stable-diffusion-v1/model.ckpt"
@@ -65,11 +53,6 @@ parser.add_argument(
     default="outputs/txt2img-samples"
 )
 parser.add_argument(
-    "--config",
-    type=str,
-    help="path to config",
-)
-parser.add_argument(
     "--skip_grid",
     action='store_true',
     help="do not save a grid, only individual samples. Helpful when evaluating lots of samples",
@@ -84,13 +67,6 @@ parser.add_argument(
     type=int,
     default=50,
     help="number of ddim sampling steps",
-)
-
-parser.add_argument(
-    "--ckpt",
-    type=str,
-    default="models/ldm/stable-diffusion-v1/model.ckpt",
-    help="path to checkpoint of model",
 )
 
 parser.add_argument(
@@ -175,46 +151,13 @@ parser.add_argument(
     choices=["full", "autocast"],
     default="autocast"
 )
-
-#Taken From https://github.com/hlky/stable-diffusion-webui/blob/master/webui.py
-parser.add_argument(
-    "--gfpgan-dir",
-    type=str,
-    help="GFPGAN directory",
-    default=None
-) # i disagree with where you're putting it but since all guidefags are doing it this way, there you go
-
-parser.add_argument(
-    "--upscale",
-    type=int,
-    default=1,
-    help="The upscale to use with GFPGAN",
-)
-
 opt = parser.parse_args()
-
-# ------------------------------------------------------------------------------
-
-GFPGAN_dir = opt.gfpgan_dir
-GFPGAN = None
-if GFPGAN_dir is not None and os.path.exists(GFPGAN_dir):
-    try:
-        GFPGAN = load_GFPGAN()
-        print("Loaded GFPGAN")
-    except Exception:
-        import traceback
-        print("Error loading GFPGAN:", file=sys.stderr)
-        print(traceback.format_exc(), file=sys.stderr)
-        raise Exception("Prout")
-else:
-    print("GFPGAN not found at", GFPGAN_dir)
-	
 
 tic = time.time()
 os.makedirs(opt.outdir, exist_ok=True)
 outpath = opt.outdir
 
-sample_path = os.path.join(outpath, "_".join(opt.prompt.split()))[:150]
+sample_path = os.path.join(outpath, '_'.join(re.split(':| ',opt.prompt)))[:150]
 os.makedirs(sample_path, exist_ok=True)
 base_count = len(os.listdir(sample_path))
 grid_count = len(os.listdir(outpath)) - 1
@@ -225,12 +168,7 @@ print("init_seed = ", opt.seed)
 seed_everything(opt.seed)
 
 
-opt.H = 64 * round(opt.H / 64)
-opt.W = 64 * round(opt.W / 64)
-
-
-
-sd = load_model_from_config(f"{opt.ckpt if opt.ckpt else ckpt}")
+sd = load_model_from_config(f"{ckpt}")
 li = []
 lo = []
 for key, value in sd.items():
@@ -249,7 +187,7 @@ for key in li:
 for key in lo:
     sd['model2.' + key[6:]] = sd.pop(key)
 
-config = OmegaConf.load(f"{opt.config if opt.config else config}")
+config = OmegaConf.load(f"{config}")
 
 if opt.small_batch:
     config.modelUNet.params.small_batch = True
@@ -351,16 +289,8 @@ with torch.no_grad():
                     x_samples_ddim = modelFS.decode_first_stage(samples_ddim[i].unsqueeze(0))
                     x_sample = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
                     x_sample = 255. * rearrange(x_sample[0].cpu().numpy(), 'c h w -> h w c')
-                    x_sample = x_sample.astype(np.uint8);
-                    
-                    if GFPGAN is not None:
-                        cropped_faces, restored_faces, restored_img = GFPGAN.enhance(x_sample[:,:,::-1], has_aligned=False, only_center_face=False, paste_back=True)
-                        x_sample = restored_img[:,:,::-1]
-                        print("GFPGAN Applied")
-
-                    img = Image.fromarray(x_sample)
-                    
-                    img.save(os.path.join(sample_path, "seed_" + str(opt.seed) + "_" + f"{base_count:05}.png"))
+                    Image.fromarray(x_sample.astype(np.uint8)).save(
+                        os.path.join(sample_path, "seed_" + str(opt.seed) + "_" + str(opt.ddim_steps) + "_" + f"{base_count:05}.png"), "PNG", pnginfo=info)
                     opt.seed+=1
                     base_count += 1
 
