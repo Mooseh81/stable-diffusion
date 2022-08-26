@@ -351,18 +351,6 @@ with torch.no_grad():
                     x_samples_ddim = modelFS.decode_first_stage(samples_ddim[i].unsqueeze(0))
                     x_sample = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
                     x_sample = 255. * rearrange(x_sample[0].cpu().numpy(), 'c h w -> h w c')
-<<<<<<< HEAD
-                    info = PngImagePlugin.PngInfo()
-                    info.add_text("Prompt", opt.prompt)
-                    info.add_text("Seed", str(opt.seed))
-                    info.add_text("Scale", str(opt.scale))
-                    info.add_text("Steps", str(opt.ddim_steps))
-                    info.add_text("Precision", opt.precision)
-                    info.add_text("Batch Size", str(opt.n_samples))
-                    info.add_text("Batch Index", str(i))
-                    Image.fromarray(x_sample.astype(np.uint8)).save(
-                        os.path.join(sample_path, "seed_" + str(opt.seed) + "_" + str(opt.ddim_eta) + "_" + f"{base_count:05}.png"), "PNG", pnginfo=info)
-=======
                     x_sample = x_sample.astype(np.uint8);
                     
                     if GFPGAN is not None:
@@ -373,7 +361,6 @@ with torch.no_grad():
                     img = Image.fromarray(x_sample)
                     
                     img.save(os.path.join(sample_path, "seed_" + str(opt.seed) + "_" + f"{base_count:05}.png"))
->>>>>>> bf4e0edddcaa3f90fc4ce533b3c5167869b4c2eb
                     opt.seed+=1
                     base_count += 1
 
