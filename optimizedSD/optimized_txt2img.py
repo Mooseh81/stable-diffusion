@@ -295,7 +295,37 @@ with torch.no_grad():
                 print(samples_ddim.shape)
                 print("saving images")
                 for i in range(batch_size):
+                    #log file creation
+                    log1 = 'prompt = '+opt.prompt
+                    log2 = 'seed = '+str(opt.seed)
+                    log3 = 'ddim_steps = '+str(opt.ddim_steps)
+                    log4 = 'n_iter = '+str(opt.n_iter)
+                    log5 = 'resolution = '+str(opt.W)+'x'+str(opt.H)
+                    log6 = 'latent channels = '+str(opt.C)
+                    log7 = 'downsampling factor = '+str(opt.f)
+                    log8 = 'samples = '+str(opt.n_samples)
+                    log9 = 'grid rows = '+str(opt.n_rows)
+                    log10 = 'scale = '+str(opt.scale)
+                    log11 = 'from-file = '+str(opt.from_file)
+                    log12 = 'small_batch = '+str(opt.small_batch)
+                    log13 = 'precision = '+str(opt.precision)
+                    log14 = 'filename = '+"seed_" + str(opt.seed) + "_" + str(opt.ddim_steps) + "_" + f"{base_count:05}.png"
+                    if os.path.exists(os.path.join(sample_path, "log.txt")):
+                        count = range(1,100000)
+                        for runcount in count:
+                            if os.path.exists(os.path.join(sample_path, "log"+str(100000-runcount)+".txt")):
+                                continue
+                            else:
+                                logtxt = "log"+str(100000-runcount)+".txt"
+                    else:
+                        logtxt = "log.txt"
                     
+                    log_lines = [log1, log2, log3, log4, log5, log6, log7, log8, log9, log10, log11, log12, log13]
+                    with open(os.path.join(sample_path, logtxt), 'w') as f:
+                        for line in log_lines:
+                            f.write(line)
+                            f.write('\n')
+                    ###
                     x_samples_ddim = modelFS.decode_first_stage(samples_ddim[i].unsqueeze(0))
                     x_sample = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
                     x_sample = 255. * rearrange(x_sample[0].cpu().numpy(), 'c h w -> h w c')
