@@ -310,15 +310,15 @@ with torch.no_grad():
                     log12 = 'small_batch = '+str(opt.small_batch)
                     log13 = 'precision = '+str(opt.precision)
                     log14 = 'filename = '+"seed_" + str(opt.seed) + "_" + str(opt.ddim_steps) + "_" + f"{base_count:05}.png"
-                    if os.path.exists(os.path.join(sample_path, "log.txt")):
+                    if os.path.exists(os.path.join(sample_path, "seed_" + str(opt.seed) + "_" + str(opt.ddim_steps) + "_" + f"{base_count:05}.txt")):
                         count = range(1,100000)
                         for runcount in count:
-                            if os.path.exists(os.path.join(sample_path, "log"+str(100000-runcount)+".txt")):
+                            if os.path.exists(os.path.join(sample_path, "seed_" + str(opt.seed) + "_" + str(opt.ddim_steps) + "_" + f"{base_count:05}"+str(100000-runcount)+".txt")):
                                 continue
                             else:
                                 logtxt = "log"+str(100000-runcount)+".txt"
                     else:
-                        logtxt = "log.txt"
+                        logtxt = "seed_" + str(opt.seed) + "_" + str(opt.ddim_steps) + "_" + f"{base_count:05}.txt"
                     
                     log_lines = [log1, log2, log3, log4, log5, log6, log7, log8, log9, log10, log11, log12, log13]
                     with open(os.path.join(sample_path, logtxt), 'w') as f:
