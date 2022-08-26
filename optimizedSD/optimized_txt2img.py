@@ -298,7 +298,7 @@ with torch.no_grad():
                     info.add_text("Batch Size", str(opt.n_samples))
                     info.add_text("Batch Index", str(i))
                     Image.fromarray(x_sample.astype(np.uint8)).save(
-                        os.path.join(sample_path, "seed_" + str(opt.seed) + "_" + str(opt.ddim_steps) + "_" + f"{base_count:05}.png"), "PNG", pnginfo=info)
+                        os.path.join(sample_path, "seed_" + str(opt.seed) + "_" + str(opt.ddim_eta) + "_" + f"{base_count:05}.png"), "PNG", pnginfo=info)
                     opt.seed+=1
                     base_count += 1
 
