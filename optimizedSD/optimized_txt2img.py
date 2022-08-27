@@ -309,9 +309,8 @@ with torch.no_grad():
                     log9 = 'grid rows = '+str(opt.n_rows)
                     log10 = 'scale = '+str(opt.scale)
                     log11 = 'from-file = '+str(opt.from_file)
-                    log12 = 'small_batch = '+str(opt.small_batch)
-                    log13 = 'precision = '+str(opt.precision)
-                    log14 = 'filename = '+"seed_" + str(opt.seed) + "_" + str(opt.ddim_steps) + "_" + f"{base_count:05}.png"
+                    log12 = 'precision = '+str(opt.precision)
+                    log13 = 'filename = '+"seed_" + str(opt.seed) + "_" + str(opt.ddim_steps) + "_" + f"{base_count:05}.png"
                     if os.path.exists(os.path.join(sample_path, "seed_" + str(opt.seed) + "_" + str(opt.ddim_steps) + "_" + f"{base_count:05}.txt")):
                         count = range(1,100000)
                         for runcount in count:
